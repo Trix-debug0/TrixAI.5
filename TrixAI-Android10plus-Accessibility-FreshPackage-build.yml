@@ -1,0 +1,49 @@
+name: Trix AI Android 10+ Accessibility Fresh Package
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract Trix AI project
+        run: |
+          rm -rf project
+          mkdir -p project
+          unzip -q TrixAI-Android10plus-Accessibility-FreshPackage.zip -d project
+
+          if [ -d "project/trixfix" ]; then
+            cp -r project/trixfix/. project/
+          fi
+
+          test -f project/settings.gradle.kts
+          test -f project/app/build.gradle.kts
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+
+      - name: Build APK
+        working-directory: project
+        run: gradle :app:assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Trix-AI-Android10plus-FreshPackage
+          path: project/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
